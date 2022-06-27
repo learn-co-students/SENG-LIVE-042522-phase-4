@@ -8,6 +8,14 @@ In this phase we will be building on our knowledge of Ruby and ActiveRecord from
 
 For the application we'll be building together, we'll be working on a meetup clone. We'll again be adding new features every day, but this time, you'll be working on the app on your own machine day by day. So, you'll want to be keeping up with the work for each day so you'll be ready to participate during the exercise the following day.
 
+## Today's Goals
+
+- Explain convention over configuration and why it’s important in Rails
+- Describe the MVC design pattern
+- Create routes in Rails
+- Identify the differences between Sinatra and Rails
+- Scaffold an API using rails generators
+
 ## A note about coding along
 
 While coding along can be a good way to practice, if you ever feel like you're having trouble coding along AND following along with the conversation we're having during the lecture, I'd recommend focusing on understanding and participating in the conversation. During this phase, I won't be doing any coding on the rails code in between lectures, so if you want to have your own version of the app on your machine that you work on independently, you can use the GitHub diffs that I'll share with you all to view the changes we made to the code during a particular lecture.
@@ -52,7 +60,7 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
 
 
 #### 3. Create the following migrations for meetup_clone
-![Meetup Clone ERD](../assets/meetup-clone-erd.png)
+![Meetup Clone ERD](./assets/meetup-clone-erd.png)
 Note: you do not need to write the tables yourself. There is a way to automatically generate the table with the corresponding columns using rails generators
 
 <details>
