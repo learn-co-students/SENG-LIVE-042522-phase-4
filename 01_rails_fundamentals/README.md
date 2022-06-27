@@ -22,7 +22,22 @@ While coding along can be a good way to practice, if you ever feel like you're h
 
 ## What things are different with Rails than they were in Sinatra
 
-- 
+- waay bigger library
+- generators
+- terminal commands seem more intuitive (more declarative)
+- routes are defined outside the controller files
+- byebug (replaces pry)
+- `rails c` instead of `rake console` (comes preconfigured)
+- `rails s` to start server (comes preconfigured)
+- in my console I can use `reload!` without having to define it :D
+- controller model relationship?
+- responding with json in a controller 
+  - render json: Dog.all
+  - Dog.all.to_json (returned from block)
+- in sinatra we call `get`, `post`, `patch` or `delete` to create a route
+- in rails we *define* methods (controller actions)
+- heavier reliance on REST conventions (index, show, create, update, destroy)
+- `resources` can create restful routes for a resource (in `config/routes.rb`)
 
 ## Lesson 1 Todos
 
