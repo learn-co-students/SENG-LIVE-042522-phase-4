@@ -107,7 +107,8 @@ The status code in the response allows us to indicate to the frontend whether or
 
 #### Example
 
-- Fetch returns a promise for a response object. The - That response object has a status code and a body that we can read from.  
+- Fetch returns a promise for a response object. 
+- That response object has a status code and a body that we can read from.  
 - When we do `response.json()` in the promise callback, we're parsing the body of the response from JSON string format to the data structure that it represents. 
 - The response object also has an `ok` property that indicates that the status code is between 200-299
 
@@ -434,7 +435,7 @@ end
 
 Send the request twice to confirm that the creation works the first time and the uniqueness validation works the second time to prevent creation of a duplicate.
 
-## Users must provide a :title, :location, :description, :start_time, :end_time when creating an event
+## Users must provide values for :title, :location, :description, :starts_at, and :ends_at when creating an event
 
 ### Request
 
@@ -601,15 +602,15 @@ end
   </summary>
   <hr/>
 
-  Yup! We need to add a validation to the title, description, location, start_time and end_time to make sure that it is present. 
+  Yup! We need to add a validation to the title, description, location, starts_at and ends_at to make sure that they are present. 
     
-We will also want to add a uniqueness validation to the title and scope it to the location and start time so that we can't add an event that has the same title at the same location and start time.
+We will also want to add a uniqueness validation to the title and scope it to the location and starts_at time so that we can't add an event that has the same title at the same location that starts at the same time.
 
   ```rb
 class Event < ApplicationRecord
   # ... 
-  validates :title, :description, :location, :start_time, :end_time, presence: true
-  validates :title, uniqueness: { scope: [:location, :start_time]}
+  validates :title, :description, :location, :starts_at, :ends_at, presence: true
+  validates :title, uniqueness: { scope: [:location, :starts_at]}
 end
 ```
 
@@ -739,13 +740,14 @@ What will the path be?
 
   Yes, it must include the event_id of the Rsvp we're going to create.
 
-  ```js
-  {
-    event_id: 1
-  }
+```js
+{
+  event_id: 1
+}
 ```
     
-    When we get to our controller later on, all of the keys in our request body must be included in our strong parameters so they are permitted to pass into the `.create` method.
+    
+When we get to our controller later on, all of the keys in our request body must be included in our strong parameters so they are permitted to pass into the `.create` method.
 
   <hr/>
 
@@ -967,7 +969,7 @@ POST
 What will the path be?
 </summary>
 <hr/>
-/rsvps
+/memberships
 
 <hr/>
 
@@ -1099,10 +1101,11 @@ end
 <details>
   <summary>
     Any changes needed to model layer (methods/validations/etc.)?
+    Our feature is: Users can join other groups. Should there be any restrictions on this?
   </summary>
   <hr/>
 
-  Yup! We need to add a uniqueness validation to the `group_id` and scope it to the `user_id` so that the same user can't join the same group more than once. We can set this one up the other way as well (validating uniqueness of `user_id` within the scope of the `group_id`), but we're going with this way because `group_id` is the attribute that our users will actually be changing.
+  Yup! Users shouldn't be able to join a group more than once! We need to add a uniqueness validation to the `group_id` and scope it to the `user_id` so that the same user can't join the same group more than once. We can set this one up the other way as well (validating uniqueness of `user_id` within the scope of the `group_id`), but we're going with this way because `group_id` is the attribute that our users will actually be changing.
 
 ```rb
 class Membership < ApplicationRecord
@@ -1228,7 +1231,7 @@ We can probably reuse this logic for handling rendering validation error message
 rescue_from ActiveRecord::RecordInvalid, with: :render_validation_errors
 
 def render_validation_errors(e)
-  render json: { errors: e.record.errors.full_messages }, status: :unprocessable_entity # 422 status code
+  render json: { errors: e.record.errors }, status: :unprocessable_entity # 422 status code
 end
 ```
 
