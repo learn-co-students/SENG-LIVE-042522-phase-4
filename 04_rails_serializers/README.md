@@ -182,7 +182,7 @@ This will allow us to include the comments when we retrieve a post from the api 
   <hr/>
 
   - I need the key attributes, :id, :title, :description, :location, :starts_at, :ends_at
-  - I also may want to convert the start and end times to something a bit more human readable for my client app
+  - I also may want to convert the starts_at and ends_at times to something a bit more human readable for my client app (like this: `From Monday, 09/20/21 at 11:09 AM to Monday, 09/20/21 at 01:09 PM`)
   - if the current user has an `rsvp` belonging to this event, I need to return it to the client:
     - if it's there, I can show a button to cancel the RSVP (delete the `rsvp`)
     - if it's not, I can show a button to RSVP to the event (create a new `rsvp`)
