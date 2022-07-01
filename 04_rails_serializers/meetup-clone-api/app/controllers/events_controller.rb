@@ -1,7 +1,7 @@
 class EventsController < ApplicationController
 
   def index
-    render json: Event.all, status: :ok
+    render json: Event.all, scope: rsvps, scope_name: :rsvps, status: :ok
   end
 
   def show
@@ -27,6 +27,20 @@ class EventsController < ApplicationController
 
   def event_params
     params.permit(:title, :description, :location, :starts_at, :ends_at, :group_id)
+  end
+
+  # cut down on additional queries by creating a
+  # hash storing the current user's rsvps by event_id
+  def rsvps
+    if @rsvps
+      @rsvps
+    else
+      @rsvps = {}
+      current_user.rsvps.each do |rsvp|
+        @rsvps[rsvp.event_id] = rsvp
+      end
+      @rsvps
+    end
   end
 
 end
