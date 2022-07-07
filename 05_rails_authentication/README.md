@@ -1,6 +1,6 @@
 # Phase 4 - Lecture 5: Rails Authentication
 
-- We'll be adding auth to the Meetup clone in part 1. The react client has been updated, if you're coding along and want to run it alongside the backend as we update it, pull down the [meetup clone client repo](https://github.com/DakotaLMartinez/042522_meetup_clone_client). 
+- We'll be adding auth to the Meetup clone today. The react client has been updated, if you're coding along and want to run it alongside the backend as we update it, pull down the [meetup clone client repo](https://github.com/DakotaLMartinez/042522_meetup_clone_client). 
 - Key Authentication Concepts for the day:
     - Sessions
     - Cookies
@@ -8,10 +8,15 @@
 
 ## Sessions, Cookies and the Hotel Keycard analogy
 
-- book a reservation -> signup for account
-- check in at front desk -> login to account
-- key card -> cookie
-- card reader -> session
+
+| Hotel                  | Web App                   | Concept               |
+| :--------------------- | :------------------------ | :-------------------- |
+| Book a reservation     | signup for an account     | Registration          |
+| Check in at front desk | Login to an account       | Authentication        |
+| ID & Credit Card       | Email/Username & Password | Credentials           |
+| Keycard                | Cookie                    | User session tracking |
+| Card reader            | Session                   | User session tracking |
+
 ## Endpoints
 These are the 4 endpoints we'll need to add to support authentication in our applications.
 | Endpoint | Purpose | params |
@@ -62,7 +67,13 @@ These are the 4 endpoints we'll need to add to support authentication in our app
 
 # Plan of Attack
 
-Because Authentication in a web application involves a set of related features, rather than an individual feature of the application, we'll be splitting our tasks into layers but in a different way than we have so far. Instead of starting with the requests and then building out the routes, controller actions, database and model changes and finally the responses, we'll start by building out the backend foundational changes(dependency, configuration, model & database) that required to support authentication. Then, we'll fill in the routes and controller actions needed to handle the 4 requests mentioned above.
+- Authentication in a web application involves a set of related features
+- Split tasks into foundational layers (working backwards)
+  - dependencies
+  - configuration
+  - model 
+  - database
+- After foundation is laid, we'll fill in the routes and controller actions needed to handle the 4 requests mentioned above.
 ## Dependencies (Gems/packages)
 <details>
   <summary>
@@ -146,8 +157,8 @@ Because Authentication in a web application involves a set of related features, 
   </summary>
   <hr/>
 
+  - We need to add the `has_secure_password` macro to the User model to implement the `password=`, `password_confirmation=` and `authenticate`  methods used in signup & login actions respectively
   - We need to add a uniqueness validation for username (and email) So we can consistently find the right user for authentication
-  - We need to add the `has_secure_password` macro to the model to implement the `authenticate` and `password=` methods used in login & signup actions respectively
 
   <hr/>
 
@@ -161,7 +172,7 @@ Because Authentication in a web application involves a set of related features, 
   </summary>
   <hr/>
 
-  - We'll want a `UserSerializer` that returns only the `id`, `username`, and `email`
+  - We'll want a `UserSerializer` that returns only the `id`, `username`, `email`, and `bio`
 
   <hr/>
 
