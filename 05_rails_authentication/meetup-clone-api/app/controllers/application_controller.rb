@@ -1,5 +1,4 @@
 class ApplicationController < ActionController::API
-  include ActionController::Cookies
   rescue_from ActiveRecord::RecordInvalid, with: :render_validation_errors
   rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
   
@@ -9,7 +8,7 @@ class ApplicationController < ActionController::API
   # later on this will return the user that's currently logged in
   # (after we know how to do authentication)
   def current_user
-    @current_user ||= User.find_by_id(session[:user_id])
+    User.first
   end
 
   def render_validation_errors(e)
