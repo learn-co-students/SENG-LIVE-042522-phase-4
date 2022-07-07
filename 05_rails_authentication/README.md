@@ -21,28 +21,28 @@ These are the 4 endpoints we'll need to add to support authentication in our app
 | post '/signup' | returns the newly created (and logged in) user | username, password, and password_confirmation |
 | delete '/logout' | removes the user_id from the session cookie | none |
 ## Checking for authentication with `GET '/me'`
-![checking for authentication](../assets/check-authentication.png)
+![checking for authentication](./assets/check-authentication.png)
 
 - We'll be using this endpoint from the frontend to determine when the user is logged in and when they're not
   - If we get an OK response, we have a logged in user
   - If we don't, that means we don't have a currently logged in user.
 ## Logging in with `POST '/login'`
 
-![Login flow](../assets/login.png)
+![Login flow](./assets/login.png)
 
 - This endpoint will be used to handle a login form submission from the client application.
   - If we get an OK response, the user's id is stored in the encrypted session cookie, logging them in and allowing access to the logged in version of the react application with that user's data. In React, we'll store the user we get back from logging in within the currentUser piece of state.
   - If we don't, we'll be able to tell the user that they presented invalid credentials in the form.
 ## Signing Up with `POST '/signup'`
 
-![Signup flow](../assets/signup.png)
+![Signup flow](./assets/signup.png)
 
 - This endpoint will be used to handle the signup form submission from the client application.
   - If we get an OK response, the newly registered user'd id will be stored in the encrypted session cookie, logging them in and allowing access to the logged in version of the react application with that user's data. In React, we'll store the user we get back from signing up within the currentUser piece of state.
   - If we don't, we'll be able to display validation errors to the user and allow them to submit the form again.
 ## Logging Out with `DELETE '/logout'`
 
-![Logout flow](../assets/logout.png)
+![Logout flow](./assets/logout.png)
 
 - This endpoint will be used to handle clicking on the logout button from the client application.
   - If we get an OK response, the user's id will be removed from the session cookie, logging them out and sending them back to the logged out version of the react application. In React, we'll set the currentUser to `null` so we get the logged out experience.
@@ -50,7 +50,7 @@ These are the 4 endpoints we'll need to add to support authentication in our app
 
 ## React Support for Authentication
 
-![React authentication flow](../assets/react-app-flow.png)
+![React authentication flow](./assets/react-app-flow.png)
 
 - The basic strategy here is to have two different top level components.
   - One for logged in users 
