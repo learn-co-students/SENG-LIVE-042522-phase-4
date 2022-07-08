@@ -5,8 +5,8 @@
 #
 #   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }])
 #   Character.create(name: 'Luke', movie: movies.first)
-user = User.create(username: "Dakota", email: "dakota@dakota.com", bio: 'i love ruby!')
-user2 = User.create(username: "Dex", email: "dex@dex.com", bio: 'i love js!')
+user = User.create(username: "Dakota", email: "dakota@dakota.com", bio: 'i love ruby!', password: 'password')
+user2 = User.create(username: "Dex", email: "dex@dex.com", bio: 'i love js!', password: 'password')
 
 group = Group.create(name: "SENG-LIVE-042522", location: 'everywhere!!!')
 

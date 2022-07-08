@@ -8,6 +8,8 @@ Today's key concepts:
 
 - Users can be admins
 - Events can only be updated and deleted by an admin or their creator
+- Memberships can only be deleted by an admin or their creator
+- Rsvps can only be update and deleted by an admin or their creator
 
 ## Adding Admin Functionality
 
@@ -54,7 +56,7 @@ We're not going to update our strong parameters in the `UsersController` so user
   <hr/>
 
   ```rb
-  def confirm_authentication
+  def authenticate_user
     render json: { errors: "You must be logged in to do that." }, status: :unauthorized unless current_user
   end
   ```
@@ -70,7 +72,7 @@ We're not going to update our strong parameters in the `UsersController` so user
 - add it to individual controllers.
     - we then have to add it in a bunch more places and we need to remember to add it if we need it.
 
-#### Say we choose the first approach, where do we need to add `skip_before_action :confirm_authentication`? ... Why?
+#### Say we choose the first approach, where do we need to add `skip_before_action :authenticate_user`? ... Why?
 
 <hr/>
 
@@ -99,7 +101,7 @@ end
 
 Currently, this will allow any logged in user to delete an event (provided they send a request with its id as the url parameter). What we want, however, is to allow only an admin user or the creator of an event to update or delete that event.
 
-In this section, we'll use our newly built `admin` functionality to authorize certain endpoints and allow admin users access to modify or delete other users' events without granting that access to everyone. We could apply this functionality to our other controllers as well, but in the interest of time, we're going to focus on the `EventsController` today.
+In this section, we'll use our newly built `admin` functionality to authorize certain endpoints and allow admin users access to modify or delete other users' events without granting that access to everyone. We'll do this in the `EventsController` first and then update our other controllers for additional practice.
 
 Before we do this, I'm going to demonstrate a pattern you'll see a lot in rails controllers. We define a private method that runs before the `show`, `update` and `destroy` actions and finds the appropriate ActiveRecord model object.
 
@@ -119,8 +121,8 @@ This will allow us to remove or replace some logic in our individual controller 
 
 ```rb
 def authorize_user
-  user_can_modify = current_user.admin? || @event.user_id == current_user.id
-  render json: { error: "You don't have permission to perform that action" }, status: :forbidden unless user_can_modify
+  return if current_user.admin? || @event.user_id == current_user.id
+  render json: { error: "You don't have permission to perform that action" }, status: :forbidden 
 end
 ```
 
@@ -145,7 +147,7 @@ class EventsController < ApplicationController
   before_action :authorize_user, only: [:update, :destroy]
   
   def index
-    events = Event.all.includes(:user_events)
+    events = Event.all
     render json: events
   end
 
@@ -154,24 +156,17 @@ class EventsController < ApplicationController
   end
 
   def create
-    event = current_user.created_events.new(event_params)
-    if event.save
-      render json: event, status: :created
-    else
-      render json: event.errors, status: :unprocessable_entity
-    end
+    event = current_user.created_events.create!(event_params)
+    render json: event, status: :created
   end
 
   def update
-    if @event.update(event_params)
-      render json: @event, status: :ok
-    else
-      render json: @event.errors, status: :unprocessable_entity
-    end
+    @event.update!(event_params)
+    render json: @event, status: :ok
   end
 
   def destroy
-    @event.destroy
+    @event.destroy!
   end
 
   private
@@ -185,7 +180,7 @@ class EventsController < ApplicationController
   end
 
   def authorize_user
-    user_can_modify = current_user.admin? || @event.user_id == current_user.id
+    return if current_user.admin? || @event.user_id == current_user.id
     render json: { error: "You don't have permission to perform that action" }, status: :forbidden unless user_can_modify
   end
 
