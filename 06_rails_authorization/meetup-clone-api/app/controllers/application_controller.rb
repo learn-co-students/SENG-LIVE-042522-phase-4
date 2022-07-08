@@ -2,6 +2,7 @@ class ApplicationController < ActionController::API
   include ActionController::Cookies
   rescue_from ActiveRecord::RecordInvalid, with: :render_validation_errors
   rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
+  before_action :authenticate_user
   
   private
 
@@ -18,5 +19,10 @@ class ApplicationController < ActionController::API
   
   def render_not_found(e)
     render json: { errors: e.message }, status: :not_found
+  end
+
+  def authenticate_user
+    return if current_user
+    render json: { errors: "You must be logged in to do that." }, status: :unauthorized
   end
 end

@@ -1,5 +1,5 @@
 class EventSerializer < ActiveModel::Serializer
-  attributes :id, :title, :description, :location, :starts_at, :ends_at, :group_id, :rsvp
+  attributes :id, :title, :description, :location, :starts_at, :ends_at, :group_id, :rsvp, :user_can_modify
 
   def rsvp
     rsvps[object.id]
@@ -17,5 +17,9 @@ class EventSerializer < ActiveModel::Serializer
       end
       @rsvps
     end
+  end
+
+  def user_can_modify
+    current_user.admin? || object.user == current_user
   end
 end
