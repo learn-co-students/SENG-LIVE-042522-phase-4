@@ -196,7 +196,7 @@ bundle add pg
 This will install the gem locally add something like this to your Gemfile:
 
 ```rb
-gem "pg", "~> 1.2"
+gem "pg", "~> 1.4"
 ```
 
 If you've had issues with Postgres locally and are planning on keeping sqlite for the dev environment, then you'll want to do the following 2 steps:
@@ -204,7 +204,7 @@ If you've had issues with Postgres locally and are planning on keeping sqlite fo
 
 ```rb
 group :production do 
-  gem "pg", "~> 1.2"
+  gem "pg", "~> 1.4"
 end
 ```
 2. Move the sqlite gem to the :development, :test group
@@ -240,11 +240,11 @@ default: &default
 
 development:
   <<: *default
-  database: meetup_clone_demo_app_development
+  database: 042522_meetup_clone_demo_app_development
 
 test:
   <<: *default
-  database: meetup_clone_demo_app_test
+  database: 042522_meetup_clone_demo_app_test
 
 production:
   <<: *default
@@ -265,7 +265,7 @@ development:
 
 test:
   <<: *default
-  database: meetup_clone_demo_app_test
+  database: 042522_meetup_clone_demo_app_test
 
 production:
   <<: *default
@@ -275,30 +275,6 @@ After you've got the configuration updated here, we'll also need to create a new
 
 ```bash
 rails db:create db:migrate db:seed
-```
-
-When we do this the first time, we'll have issues because our seed users don't have passwords (and thus fail the validation added by `has_secure_password`).
-
-```rb
-dakota = User.create(username: "Dakota", email: "dakota@flatironschool.com")
-sam = User.create(username: "Sam", email: "sam.boahen@flatironschool.com")
-marc = User.create(username: "Marc", email: "marc.majcher@flatironschool.com")
-shivang = User.create(username: "Shivang", email: "shivang.dave@flatironschool.com")
-```
-
-let's add super insecure demo passwords for now:
-
-```rb
-dakota = User.create(username: "Dakota", email: "dakota@flatironschool.com", password: "password")
-sam = User.create(username: "Sam", email: "sam.boahen@flatironschool.com", password: "password")
-marc = User.create(username: "Marc", email: "marc.majcher@flatironschool.com", password: "password")
-shivang = User.create(username: "Shivang", email: "shivang.dave@flatironschool.com", password: "password")
-```
-
-And then, try running the command again:
-
-```
-rails db:seed:replant
 ```
 
 If we get no printout here, that means we're good to go! When we were using Sqlite, we could use the Sqlite explorer to view information in our database right from within VSCode. We can add a [Postgres extension for VSCode](https://marketplace.visualstudio.com/items?itemName=ckolkman.vscode-postgres) to enable the same thing for Postgres. I recorded a quick demo of how to get started with the extension and make your first database connection. After you're set up initially, it's pretty similar to the SQLite Explorer.
@@ -314,6 +290,7 @@ We also need to handle our routing configuration. Requests coming from our react
 ```rb
 get "*path", to: "fallback#index", constraints: ->(req) { !req.xhr? && req.format.html? }
 ```
+
 
 We're adding a couple of constraints to this route. This route will apply if we're not sending a fetch request and we're sending a request for html. This will mainly apply to the first time we visit the application and if we refresh the page any time thereafter. 
 
@@ -332,6 +309,72 @@ class FallbackController < ActionController::Base
 end
 ```
 
+## Removing conflict between client & server side routes
+
+We need to create an api namespace for routes so that they all start with `/api`. For example: `/api/login`, `/api/groups` etc.
+
+To do this, we need to do 3 things:
+
+- Create a namespace within the `config/routes.rb` file and move all but the fallback route into it:
+- create a folder called `api` at `app/controllers/api` and move the `EventsController`, `UsersController`, `SessionsController`, `MembershipsController`, `RsvpsController`, and `GroupsController` files into the `api` folder
+- add `Api::` before each of the class names defined in the controller files listed in the previous step
+
+#### Routes
+
+```rb
+# config/routes.rb
+Rails.application.routes.draw do
+  namespace :api do 
+    resources :rsvps, only: [:create, :update, :destroy]
+    resources :memberships, only: [:create, :destroy]
+    resources :events
+    resources :groups, only: [:index, :show, :create]
+    resources :users
+    # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
+  
+    get "/me", to: "users#show"
+    post "/signup", to: "users#create"
+    post "/login", to: "sessions#create"
+    delete "/logout", to: "sessions#destroy"
+  end
+
+  get "*path", to: "fallback#index", constraints: ->(req) { !req.xhr? && req.format.html? }
+end
+```
+
+#### An example of a namespaced controller
+
+```rb
+# app/controllers/api/sessions_controller.rb
+class Api::SessionsController < ApplicationController
+  skip_before_action :authenticate_user 
+
+  # POST '/login'
+  def create
+    user = User.find_by(username: params[:username])
+    if user&.authenticate(params[:password])
+      session[:user_id] = user.id
+      render json: user, status: :ok
+    else
+      render json: { errors: 'Invalid credentials' }, status: :unauthorized
+    end
+  end
+
+  # DELETE '/logout'
+  def destroy
+    if current_user
+      session.clear
+    else
+      render json: { errors: "No active session" }, status: :unauthorized
+    end
+  end
+
+
+end
+```
+
+## Setting up the Client
+
 To configure our client side application for building and deployment, we'll need to create a `package.json` file at the root of the project.
 
 ```bash
@@ -344,7 +387,7 @@ touch `package.json`
   "version": "1.0.0",
   "description": "Build and Deployment Configuration for Meetup Clone's React client",
   "engines": {
-    "node": ">= 14"
+    "node": "16.13.2"
   },
   "scripts": {
     "clean": "rm -rf public",
@@ -355,6 +398,63 @@ touch `package.json`
   "author": "DakotaLMartinez"
 }
 ```
+
+> NOTE: Make sure that your value for engines.node is the version of node that you see when you run `node -v` on your machine.
+
+We now need to get our react client code into the same directory as our server side code:
+
+```bash
+git clone git@github.com:DakotaLMartinez/042522_meetup_clone_client.git client
+```
+
+Then let's remove the nested git repository from the cloned client:
+
+```bash
+rm -rf client/.git
+```
+
+## Update fetch requests to use /api namespaced routes
+
+Replace all occurrences of:
+
+``` 
+fetch('
+```
+
+with 
+
+```
+fetch('/api)
+```
+
+Then replace all occurrences of:
+
+```
+fetch("
+```
+
+with 
+
+```
+fetch("/api
+```
+
+(This time be careful to only change files within the client directory!)
+
+Finally, replace all occurrences of:
+
+```
+fetch(`
+```
+
+with
+
+```
+fetch(`/api
+```
+
+## Testing it out locally
+
 
 When we get into our heroku configuration, we'll tell Heroku that there is a node component to our application. This will tell heroku to run the heroku-postbuild script after the application is deployed. When this happens, the public directory will be removed, we'll get an npm install and a build in the client directory and all of the contents of the build directory in client will be copied into the public directory of our rails application.
 
@@ -371,7 +471,7 @@ rails s
 
 If we visit our react app in the browser and navigate around and then refresh the page and everything works then we're on the right track.
 
-Let's try it out, log in to the application and refresh the page. Whoops!  Looks like we're seeing api data here. Why?
+Let's try it out, log in to the application and refresh the page.
 
 -------
 -------
@@ -386,143 +486,6 @@ Let's try it out, log in to the application and refresh the page. Whoops!  Looks
 -------
 -------
 
-Okay, so our client side route matches a server side route exactly. That's a problem! We need to create a namespace for our api routes so that they all start with /api and we can distinguish between them and the client side routes.
-
-```rb
-Rails.application.routes.draw do
-  namespace :api do 
-    resources :events, only: [:index, :show, :create, :update, :destroy]
-    resources :groups, only: [:index, :show, :create]
-    resources :user_groups, only: [:index, :create, :destroy]
-    resources :user_events, only: [:index, :create, :update, :destroy]
-    # resources :users
-    # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
-    get "/me", to: "users#show"
-    post "/signup", to: "users#create"
-    post "/login", to: "sessions#create"
-    delete "/logout", to: "sessions#destroy"
-  end
-
-  get "*path", to: "fallback#index", constraints: ->(req) { !req.xhr? && req.format.html? }
-end
-```
-
-What else do we need to do here to make sure things still work right?
-
--------
--------
--------
--------
--------
--------
--------
--------
--------
--------
--------
--------
-
-
-Look for all occurences within client or public of:
-fetch(\`
-replace with
-fetch(\`/api)
-
-All
-fetch('
-replace with
-fetch('/api)
-
-Finally all:
-fetch(")
-replace with
-fetch("/api)
-
-If we do this using the global find and replace, it should get all of the fetches (including the ones in the built code from our heroku script so we don't need to build again!)
-
-Now, when we try it, it's not working to login and we get this in our rails server logs:
-
-```
-Started POST "/api/login" for ::1 at 2021-10-04 16:55:38 -0700
-  
-ActionController::RoutingError (uninitialized constant Api):
-```
-
-The issue is that when we add a namespace to our routes, Rails is expecting a subdirectory within the controllers directory and a constant preceding all of our controller names. To fix this, we can run some terminal commands to move the files around (or do this manually through the VS Code interface):
-
-```bash
-mkdir app/controllers/api
-mv app/controllers/events_controller.rb app/controllers/api/events_controller.rb
-mv app/controllers/groups_controller.rb app/controllers/api/groups_controller.rb
-mv app/controllers/sessions_controller.rb app/controllers/api/sessions_controller.rb
-mv app/controllers/user_events_controller.rb app/controllers/api/user_events_controller.rb
-mv app/controllers/user_groups_controller.rb app/controllers/api/user_groups_controller.rb
-mv app/controllers/users_controller.rb app/controllers/api/users_controller.rb
-```
-
-Then, we need to open up those controllers and add `Api::` before each of the class names. 
-
->**NOTE**: When you're working on your project, you can also use the model and controller generator separately to avoid this renaming. For example
-
-```
-rails g controller api/groups
-```
-
-> This will give you a class called `Api::GroupsController` in a file at `app/controllers/api/groups_controller.rb`
-
-Now, we can go back to the browser and submit the login form again. This time it works!
-
-Now, let's try to refresh the page and see if we're still seeing the react app (and not api data). Now, when we refresh, we continue to see the react app. However, we don't currently have a `Redirect` tag in our `AuthenticatedApp` component, so we don't see the groups upon logging in. So, let's go add that to the `AuthenticatedApp` component:
-
-```js
-import './App.css';
-import GroupsContainer from './components/GroupsContainer'
-import EventsContainer from './components/EventsContainer'
-import { Switch, Route, NavLink, Redirect, useHistory } from 'react-router-dom'
-
-function AuthenticatedApp({ currentUser, setCurrentUser }) {
-  const history = useHistory()
-  
-  const handleLogout = () => {
-    fetch(`/api/logout`, {
-      method: 'DELETE',
-      credentials: 'include'
-    })
-      .then(res => {
-        if (res.ok) {
-          setCurrentUser(null)
-          history.push('/')
-        }
-      })
-  }
-  return (
-    <div className="App">
-      <nav>
-        <span>
-          <NavLink to="/groups">Groups</NavLink>{" - "}
-          <NavLink to="/events">Events</NavLink>
-        </span>
-        <span>Logged in as {currentUser.username} <button onClick={handleLogout}>Logout</button></span>
-      </nav>
-      <Switch>
-        <Route path="/groups">
-          <GroupsContainer />
-        </Route>
-        <Route path="/events">
-          <EventsContainer />
-        </Route>
-        <Redirect to="/groups" />
-      </Switch>
-    </div>
-  );
-}
-
-export default AuthenticatedApp;
-```
-
-Because we're changing a source file, we'll need to run the script again at this point to trigger the build again. Now, we can try refreshing the page after logging in and we should actually still see the groups client side endpoint.
-
-Now that the app works when built using our configured scripts in package.json with a postgres database, we can start the heroku piece.
 
 ## Configuring Heroku via the Heroku CLI
 
@@ -589,7 +552,7 @@ git commit -m "configure for heroku"
 Heroku will only deploy from main or master, so we're going to push the master branch up:
 
 ```
-git push heroku master
+git push heroku main
 ```
 
 This should take quite a while to build, deploy, install and migrate the first time, but once we're done, we can run 
