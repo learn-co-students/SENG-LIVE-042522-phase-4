@@ -41,9 +41,26 @@ Once done, do it again but using another algorithm.
  - Run test case examples 
  - Give Big - O
 
- ### Singly Linked List
+### Singly Linked List
 ![Singly Linked List](https://media.geeksforgeeks.org/wp-content/cdn-uploads/20200922124319/Singly-Linked-List1.png)
+
+### Applications of linked list in computer science
+
+- Implementation of stacks and queues
+- Implementation of graphs : Adjacency list representation of graphs is most popular which is uses linked list to store adjacent vertices.
+- Dynamic memory allocation : We use linked list of free blocks.
+- Maintaining directory of names
+- Performing arithmetic operations on long integers
+- Manipulation of polynomials by storing constants in the node of linked list
+- representing sparse matrices
+
+### Applications of linked list in real world
+
+- Image viewer – Previous and next images are linked, hence can be accessed by next and previous button.
+- Previous and next page in web browser – We can access previous and next url searched in web browser by pressing back and next button since, they are linked as linked list.
+- Music Player – Songs in music player are linked to previous and next song. you can play songs either from starting or ending of the list.
 
 ## Resources
 
 - [LinkedList applications](https://www.geeksforgeeks.org/applications-of-linked-list-data-structure/)
+- [Circular Linked lists](https://medium.com/amiralles/mastering-data-structures-in-ruby-circular-linked-lists-8bd35769cc5#:~:text=The%20defining%20factor%20for%20circular,head%20over%20and%20over%20again.)
